@@ -1,4 +1,7 @@
-# FreeFall
-This Python script calculates the parameters of a free fall. It takes into account the drag force.
+# Free Fall Parameters Calculator
 
-International Atmosphere Model is implemented.
+### This Python script calculates the parameters of a free fall from the edge of Earth's atmosphere. It takes into account the drag force.
+
+Features:
+* International Atmosphere Model
+* Quadratic Drag equation
