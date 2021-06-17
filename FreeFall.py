@@ -7,84 +7,87 @@ Viscosity is calculated based on Sutherland equation.
 Only troposphere is modelled therefore the maximum allowable release height is 11000m.
 
 Release notes:
-* Includes lower stratosphere (up to 25000m)
+* Includes lower stratosphere only (up to 25000m)
 """
 
 import math
 
-# constants
-GRAVITY = 9.81
-TIME_STEP = 0.05
-S = 110.4
-B = 1.46E-6
 
-def user_input(text, default):
+def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
 	"""
-	Asks user for the input and checks its correctness
+
+	@param mass: mass of a ball [kg]
+	@param diameter: diameter of a ball [mm]
+	@param drag_c: coefficient of drag
+	@param drop_h: drop height [m]
+	@return:
 	"""
-	while True:
-		try:
-			value = float(raw_input(text) or default)
-			if value>0:		
-				break
-			else:
-				print "Give a positive value!"
-		except:
-			print "Give a number!"
-	return value
 
-mass = user_input("Mass (def: 0.04)[kg]: ","0.04")
-diameter = user_input("Diameter (def: 10)[mm]: ","10")
-drag_c = user_input("Coefficient of drag (def: 0.44): ","0.44")
-drop_h = user_input("Drop height (def: 10000)[m]: ","10000")
+	if not isinstance(mass, (float, int)) or not isinstance(diameter, (float, int)):
+		print("Error! Only numerical values are allowed.")
+		return False
 
-area = 3.14*diameter**2/4*0.000001
+	if mass <= 0:
+		print("Error! Mass has to be a positive value.")
+		return False
 
-print "\nSphere cross sectional area is: " + str(area) + " m2\n"
+	if diameter <= 0:
+		print("Error! Diameter has to be a positive value.")
+		return False
 
-velocity = [0]					# stores the current velocity
-distance = [0] 					# stores the distance travelled
-time     = [0]					# stores the current time
-h = drop_h                      # stores the actual height
-max_mach = 0
-Re_max = 0
+	gravity = 9.81
+	time_step = 0.05
+	s = 110.4		# used for viscosity
+	b = 1.46E-6		# used for viscosity
 
+	area = 3.14*diameter**2/4*0.000001
 
-while h>0:
-	if h>11000:
-		T = -56.46                       					# air temperature [deg C]
-		P = 22.65*math.exp(1.73-.000157*h)       			# calculates air pressure [kPa]
-		density = P/(0.2869*(T+273.1))             			# calculates air density [kg/m3]
-	else:
-		T = 15.04 - 0.00649*h                       		# calculates air temperature [deg C]
-		P = 101.29*((T+273.1)/288.08)**5.256        		# calculates air pressure [kPa]
-		density = P/(0.2869*(T+273.1))             			# calculates air density [kg/m3]
-		
-	sound = math.sqrt(1.4*P*1000/density)					# calculates speed of sound[m/s]
-	mach = velocity[-1]/sound								# calculates Mach number [-]
-	viscosity = (B*(T+273.1)**1.5)/(T+S+273.1)				# calculates viscosity [Pa s]
-	Re = density*velocity[-1]*diameter*0.001/viscosity		# calculates Reynold number [-]
-	
-	if mach>max_mach:
-		max_mach = mach
-	if Re>Re_max:
-		Re_max = Re
+	print("\nSphere cross sectional area is: {} mm^2" .format(area))
 
-	k = density*area*drag_c/2                   			# calculates shape drag coefficient  
-	terminal = math.sqrt(mass*GRAVITY/k)        			# calculates terminal velocity [m/s]
-	time.append(time[-1] + TIME_STEP)
-	velocity.append(terminal*math.tanh(GRAVITY*time[-1]/terminal)) 
-	distance.append(distance[-1] + (velocity[-2] + velocity[-1])/2*TIME_STEP)	# calculates the total distance travelled [m]
-	h = drop_h - distance[-1]                                           		# calculates the actual height [m]
+	velocity = [0]					# stores the current velocity
+	distance = [0] 					# stores the distance travelled
+	time = [0]					    # stores the current time
+	h = drop_h                      # stores the actual height
+	max_mach = 0
+	re_max = 0
+	reynolds_tracking = []
 
-if max_mach>0.6:
-	print "WARNING: Mach number above 0.6!\n"
+	while h > 0:
+		if h > 11000:
+			temp_c = -56.46                						    # air temperature [deg C]
+			press = 22.65*math.exp(1.73-.000157*h)       			# air pressure [kPa]
+			density = press/(0.2869*(temp_c+273.1))             	# air density [kg/m3]
+		else:
+			temp_c = 15.04 - 0.00649*h                       		# air temperature [deg C]
+			press = 101.29*((temp_c+273.1)/288.08)**5.256        	# air pressure [kPa]
+			density = press/(0.2869*(temp_c+273.1))             	# air density [kg/m3]
 
-if Re>200000:
-	print "WARNING: Re number above 200000!\n"
+		sound = math.sqrt(1.4*press*1000/density)						# speed of sound[m/s]
+		mach = velocity[-1]/sound								    	# Mach number [-]
+		viscosity = (b*(temp_c+273.1)**1.5)/(temp_c+s+273.1)			# viscosity [Pa s]
+		reynolds = density*velocity[-1]*diameter*0.001/viscosity		# Reynold number [-]
+		reynolds_tracking.append(reynolds)
 
-print "RESULTS:"
-print "Falling time is: " + str(time[-1]) + " s"
-print "Impact velocity is: " + str(velocity[-1]) + " m/s"
+		if mach > max_mach:
+			max_mach = mach
+		if reynolds > re_max:
+			re_max = reynolds
 
-input("Press ENTER to exit")
+		k = density*area*drag_c/2                   			# calculates shape drag coefficient
+		terminal = math.sqrt(mass*gravity/k)        			# calculates terminal velocity [m/s]
+		time.append(time[-1] + time_step)
+		velocity.append(terminal*math.tanh(gravity*time[-1]/terminal))
+		distance.append(distance[-1] + (velocity[-2] + velocity[-1])/2*time_step)	 # the total distance travelled [m]
+		h = drop_h - distance[-1]                                           		 # the actual height [m]
+
+	if max_mach > 0.6:
+		print("WARNING: Mach number above 0.6!\n")
+
+	if max(reynolds_tracking) > 200000:
+		print("WARNING: reynolds number above 200000!\n")
+
+	print("RESULTS:")
+	print("Falling time is: {:.3f}s ".format(time[-1]))
+	print("Impact velocity is {:.3f} m/s".format(velocity[-1]))
+
+	return [velocity, distance, time]
