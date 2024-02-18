@@ -1,5 +1,5 @@
 from unittest import TestCase
-import FreeFall
+from src import FreeFall
 
 
 class Test(TestCase):
