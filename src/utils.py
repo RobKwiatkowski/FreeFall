@@ -1,4 +1,9 @@
+"""
+Utility functions
+"""
+
 import math
+
 
 def stratospheric_model(height: float) -> tuple:
     """
@@ -95,23 +100,75 @@ def calculate_mach_number(velocity, sound_speed):
     return velocity / sound_speed
 
 
-def calculate_reynolds(density, velocity, diameter, viscosity):
+def calculate_reynolds(
+    density: float, velocity: float, diameter: float, viscosity: float
+) -> list:
+    """
+
+    Args:
+        density:
+        velocity:
+        diameter:
+        viscosity:
+
+    Returns:
+
+    """
     return density * velocity * diameter * 0.001 / viscosity
 
 
 def update_drag_coefficient(density, area, drag_c):
+    """
+
+    Args:
+        density:
+        area:
+        drag_c:
+
+    Returns:
+
+    """
     return density * area * drag_c / 2
 
 
 def calculate_terminal_velocity(mass, drag_coefficient):
+    """
+
+    Args:
+        mass:
+        drag_coefficient:
+
+    Returns:
+
+    """
     gravity = 9.81
     return math.sqrt(mass * gravity / drag_coefficient)
 
 
 def calculate_velocity(terminal, current_time):
+    """
+
+    Args:
+        terminal:
+        current_time:
+
+    Returns:
+
+    """
     gravity = 9.81
     return terminal * math.tanh(gravity * current_time / terminal)
 
 
 def calculate_total_distance(distance, curr_velocity, prev_velocity, time_step):
+    """
+
+    Args:
+        distance:
+        curr_velocity:
+        prev_velocity:
+        time_step:
+
+    Returns:
+
+    """
     return distance + (prev_velocity + curr_velocity) / 2 * time_step

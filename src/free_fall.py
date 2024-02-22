@@ -2,14 +2,21 @@
 This program calculates free fall parameters of a sphere released from a given altitude.
 It includes drag force change with the altitude and speed.
 
-International Standard Atmosphere (ISA) air parameters are modelled by approximation functions from NASA webpage.
+International Standard Atmosphere (ISA) air parameters are modelled by approximation functions
+from NASA webpage.
 Viscosity is calculated based on Sutherland equation.
 """
 
 from utils import *
 
 
-def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
+def drop_calc(
+    mass: float,
+    diameter: float,
+    drag_c: float = 0.44,
+    drop_h: float = 1000,
+    verbose: bool = True,
+) -> list:
     """
 
     Args:
@@ -17,6 +24,7 @@ def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
             diameter: diameter of an object [mm]
             drag_c: coefficient of drag at sea level[-]
             drop_h: drop height [m]
+            verbose: verbosity level
 
     Returns:
             History of velocity, distance and time
@@ -87,9 +95,10 @@ def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
     if max(reynolds_tracking) > 200000:
         print("WARNING: reynolds number above 200000!\n")
 
-    print("\nSphere cross sectional area is: {} mm^2".format(area))
-    print("RESULTS:")
-    print("Falling time is: {:.3f}s ".format(time[-1]))
-    print("Impact velocity is {:.3f} m/s".format(velocity[-1]))
+    if verbose:
+        print("\nSphere cross sectional area is: {} mm^2".format(area))
+        print("RESULTS:")
+        print("Falling time is: {:.3f}s ".format(time[-1]))
+        print("Impact velocity is {:.3f} m/s".format(velocity[-1]))
 
     return [velocity, distance, time]
