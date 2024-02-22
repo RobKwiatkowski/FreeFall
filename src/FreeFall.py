@@ -10,24 +10,34 @@ Only troposphere is modelled therefore the maximum allowable release height is 1
 import math
 
 
-def stratospheric_model():
-    pass
+def stratospheric_model(height):
+    temperature = -56.46  # air temperature [deg C]
+    pressure = 22.65 * math.exp(1.73 - 0.000157 * height)  # air pressure [kPa]
+    density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
+
+    return temperature, pressure, density
 
 
-def tropospheric_model():
-    pass
+def tropospheric_model(height):
+    temperature = 15.04 - 0.00649 * height  # air temperature [deg C]
+    pressure = 101.29 * ((temperature + 273.1) / 288.08) ** 5.256  # air pressure [kPa]
+    density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
+
+    return temperature, pressure, density
 
 
-def calculate_speed_of_sound():
-    pass
+def calculate_speed_of_sound(press, density):
+    return math.sqrt(1.4 * press * 1000 / density)
 
 
-def calculate_viscosity():
-    pass
+def calculate_viscosity(temperature, s, b):
+    temp_kelvin = temperature + 273.1
+    viscosity = (b * temp_kelvin ** 1.5) / (temp_kelvin + s)
+    return viscosity
 
 
-def calculate_mach_number():
-    pass
+def calculate_mach_number(velocity, sound_speed):
+    return velocity / sound_speed
 
 
 def calculate_reynolds():
@@ -73,26 +83,20 @@ def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
     velocity = [0]  # stores the current velocity
     distance = [0]  # stores the distance travelled
     time = [0]  # stores the current time
-    h = drop_h  # actual height
+    h_actual = drop_h  # actual height
     max_mach = 0  # actual Mach number
     re_max = 0  # actual Reynolds number
     reynolds_tracking = []  # stores history of Reynolds number
 
-    while h > 0:
-        if h > 11000:  # use model strato
-            temp_c = -56.46  # air temperature [deg C]
-            press = 22.65 * math.exp(1.73 - 0.000157 * h)  # air pressure [kPa]
-            density = press / (0.2869 * (temp_c + 273.1))  # air density [kg/m3]
+    while h_actual > 0:
+        if h_actual > 11000:
+            temp_c, press, density = stratospheric_model(h_actual)
         else:  # use model tropo
-            temp_c = 15.04 - 0.00649 * h  # air temperature [deg C]
-            press = 101.29 * ((temp_c + 273.1) / 288.08) ** 5.256  # air pressure [kPa]
-            density = press / (0.2869 * (temp_c + 273.1))  # air density [kg/m3]
+            temp_c, press, density = tropospheric_model(h_actual)
 
-        sound = math.sqrt(1.4 * press * 1000 / density)  # speed of sound[m/s]
-        mach = velocity[-1] / sound  # Mach number [-]
-        viscosity = (b * (temp_c + 273.1) ** 1.5) / (
-            temp_c + s + 273.1
-        )  # viscosity [Pa s]
+        sound = calculate_speed_of_sound(press, density)
+        mach = calculate_mach_number(velocity[-1], sound)
+        viscosity = calculate_viscosity(temp_c, s, b)
         reynolds = (
             density * velocity[-1] * diameter * 0.001 / viscosity
         )  # Reynold number [-]
@@ -110,7 +114,7 @@ def drop_calc(mass, diameter, drag_c=0.44, drop_h=1000):
         distance.append(
             distance[-1] + (velocity[-2] + velocity[-1]) / 2 * time_step
         )  # the total distance travelled [m]
-        h = drop_h - distance[-1]  # the actual height [m]
+        h_actual = drop_h - distance[-1]  # the actual height [m]
 
     if max_mach > 0.6:
         print("WARNING: Mach number above 0.6!\n")
