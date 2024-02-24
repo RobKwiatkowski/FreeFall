@@ -14,7 +14,6 @@ def stratospheric_model(height: float) -> dict:
 
     Returns:
         parameters of the air: temperature, pressure, density, speed of sound
-
     """
 
     temperature = -56.46  # air temperature [deg C]
@@ -42,7 +41,6 @@ def tropospheric_model(height: float) -> dict:
 
     Returns:
         parameters of the air: temperature, pressure, density
-
     """
 
     temperature = 15.04 - 0.00649 * height  # air temperature [deg C]
@@ -63,20 +61,18 @@ def tropospheric_model(height: float) -> dict:
 
 def atmosphere_model(altitude: float) -> dict:
     """
-
     Args:
         altitude: current altitude [m]
 
     Returns:
         data from appropriate atmospheric model
-
     """
     if altitude > 11000:
-        model = stratospheric_model(altitude)
+        model_data = stratospheric_model(altitude)
     else:
-        model = tropospheric_model(altitude)
+        model_data = tropospheric_model(altitude)
 
-    return model
+    return model_data
 
 
 def _calculate_speed_of_sound(pressure: float, density: float) -> float:
@@ -101,7 +97,6 @@ def calculate_viscosity(temperature):
 
     Returns:
         calculated viscosity
-
     """
     s = 110.4  # Sutherland Constant
     b = 1.46e-6  # air viscosity at 15 deg C
@@ -112,7 +107,6 @@ def calculate_viscosity(temperature):
 
 def calculate_sphere_cross_section(diameter: float) -> float:
     """
-
     Args:
         diameter: diameter of a sphere in millimeters
 
@@ -177,48 +171,22 @@ def check_flight_conditions(air: dict, velocity, diameter: float, flags: list) -
     return flags
 
 
-def update_drag_coefficient(density, area, drag_c):
-    """
+def calculate_velocity(air, mass, cross_section, drag_c, current_time):
+    """ Calculates current velocity considering the terminal velocity
 
     Args:
-        density: air density
-        area: cross-section area
+        air: air parameters
+        mass: mass of an object [kg]
+        cross_section: cross_section of an object [m2]
         drag_c: coefficient of drag
-
-    Returns:
-        updated drag coefficient
-    """
-    return density * area * drag_c / 2
-
-
-def _calculate_terminal_velocity(mass, drag_coefficient):
-    """
-
-    Args:
-        mass: mass of an object
-        drag_coefficient: drag coefficient
-
-    Returns:
-        calculated terminal velocity
-    """
-
-    gravity = 9.81
-    return math.sqrt(mass * gravity / drag_coefficient)
-
-
-def calculate_velocity(mass, drag_co, current_time):
-    """
-
-    Args:
-        mass: mass of an object
-        drag_co: drag coefficient
-        current_time: current drop time
+        current_time: current time of flight
 
     Returns:
         Air viscosity
     """
     gravity = 9.81
-    terminal = _calculate_terminal_velocity(mass, drag_co)
+    coefficient = air['density'] * cross_section * drag_c / 2
+    terminal = math.sqrt(mass * gravity / coefficient)
     return terminal * math.tanh(gravity * current_time / terminal)
 
 

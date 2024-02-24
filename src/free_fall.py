@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import utils
 
 
-@dataclass()
+@dataclass(kw_only=True)
 class Object:
     """
     Object to be dropped.
@@ -63,10 +63,8 @@ class Object:
 
             time.append(time[-1] + time_step)
 
-            k = utils.update_drag_coefficient(
-                air["density"], self.cross_section, self.drag_c
-            )
-            current_velocity = utils.calculate_velocity(self.mass, k, time[-1])
+            current_velocity = utils.calculate_velocity(
+                air, self.mass, self.cross_section, self.drag_c, time[-1])
             velocity.append(current_velocity)
 
             step_distance = utils.calculate_step_distance(
