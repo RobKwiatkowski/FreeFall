@@ -3,7 +3,6 @@ Utility functions
 """
 
 import math
-from typing import Callable
 
 
 def stratospheric_model(height: float) -> dict:
@@ -62,14 +61,14 @@ def tropospheric_model(height: float) -> dict:
     return air
 
 
-def atmosphere_model(altitude: float) -> Callable:
+def atmosphere_model(altitude: float) -> dict:
     """
 
     Args:
         altitude: current altitude [m]
 
     Returns:
-        atmospheric model
+        data from appropriate atmospheric model
 
     """
     if altitude > 11000:
@@ -216,7 +215,7 @@ def calculate_velocity(mass, drag_co, current_time):
         current_time: current drop time
 
     Returns:
-
+        Air viscosity
     """
     gravity = 9.81
     terminal = _calculate_terminal_velocity(mass, drag_co)
