@@ -22,7 +22,7 @@ def stratospheric_model(height: float) -> tuple:
     density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
     sound = _calculate_speed_of_sound(pressure, density)
 
-    return temperature, pressure, density, sound
+    return temperature, density, sound
 
 
 def tropospheric_model(height: float) -> tuple:
