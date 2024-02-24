@@ -1,3 +1,9 @@
-from free_fall import drop_calc
+"""
+Main file
+"""
 
-v, d, t = drop_calc(mass=50, diameter=20)
+from free_fall import Object, drop_calc
+
+ball = Object(1, 20, 0.44)
+
+v, d, t = drop_calc(ball)

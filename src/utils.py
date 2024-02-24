@@ -5,7 +5,7 @@ Utility functions
 import math
 
 
-def stratospheric_model(height: float) -> tuple:
+def stratospheric_model(height: float) -> dict:
     """
     Calculates air parameters in a stratosphere as a function of height above the sea level
 
@@ -21,11 +21,19 @@ def stratospheric_model(height: float) -> tuple:
     pressure = 22.65 * math.exp(1.73 - 0.000157 * height)  # air pressure [kPa]
     density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
     sound = _calculate_speed_of_sound(pressure, density)
+    viscosity = calculate_viscosity(temperature)
 
-    return temperature, density, sound
+    air = {
+        "temp_c": temperature,
+        "density": density,
+        "sound": sound,
+        "viscosity": viscosity,
+    }
+
+    return air
 
 
-def tropospheric_model(height: float) -> tuple:
+def tropospheric_model(height: float) -> dict:
     """
     Calculates air parameters in a troposphere as a function of height above the sea level
 
@@ -41,8 +49,16 @@ def tropospheric_model(height: float) -> tuple:
     pressure = 101.29 * ((temperature + 273.1) / 288.08) ** 5.256  # air pressure [kPa]
     density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
     sound = _calculate_speed_of_sound(pressure, density)
+    viscosity = calculate_viscosity(temperature)
 
-    return temperature, density, sound
+    air = {
+        "temp_c": temperature,
+        "density": density,
+        "sound": sound,
+        "viscosity": viscosity,
+    }
+
+    return air
 
 
 def _calculate_speed_of_sound(pressure: float, density: float) -> float:
