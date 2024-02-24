@@ -61,6 +61,23 @@ def tropospheric_model(height: float) -> dict:
     return air
 
 
+def atmosphere_model(altitude):
+    """
+
+    Args:
+        altitude:
+
+    Returns:
+
+    """
+    if altitude > 11000:
+        model = stratospheric_model(altitude)
+    else:
+        model = tropospheric_model(altitude)
+
+    return model
+
+
 def _calculate_speed_of_sound(pressure: float, density: float) -> float:
     """
     Calculates a speed of sound
@@ -134,6 +151,29 @@ def calculate_reynolds(
 
     """
     return density * velocity * diameter * 0.001 / viscosity
+
+
+def check_flight_conditions(air: dict, velocity, diameter: float, flags: list) -> list:
+    """
+
+    Args:
+        air: air parameters
+        velocity: current flight velocity
+        diameter: object diameter
+        flags: flags list
+
+    Returns:
+        updated flags
+
+    """
+    mach = calculate_mach_number(velocity, air["sound"])
+    reynolds = calculate_reynolds(air["density"], velocity, diameter, air["viscosity"])
+
+    if mach > 0.6 and flags[0] == 0:
+        flags[0] = 1
+    if reynolds > 200000 and flags[1] == 0:
+        flags[1] = 1
+    return flags
 
 
 def update_drag_coefficient(density, area, drag_c):
@@ -210,21 +250,3 @@ def calculate_step_distance(curr_velocity, prev_velocity, time_step):
 
     """
     return (prev_velocity + curr_velocity) / 2 * time_step
-
-
-def check_flight_conditions(mach: float, reynolds: float, flags: list) -> list:
-    """
-
-    Args:
-        mach: current Mach number
-        reynolds: current Reynolds number
-
-    Returns:
-
-    """
-
-    if mach > 0.6 and flags[0] == 0:
-        flags[0] = 1
-    if reynolds > 200000 and flags[1] == 0:
-        flags[1] = 1
-    return flags

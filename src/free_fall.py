@@ -7,92 +7,82 @@ from NASA webpage.
 Viscosity is calculated based on Sutherland equation.
 """
 
-import utils
 from dataclasses import dataclass
+import utils
 
 
 @dataclass()
 class Object:
+    """
+    Object to be dropped.
+    """
+
     mass: float | int
     diameter: float | int
     drag_c: float | int
 
     def __post_init__(self):
-        for (name, field_type) in self.__annotations__.items():
+        for name, field_type in self.__annotations__.items():
             if not isinstance(self.__dict__[name], field_type):
                 current_type = type(self.__dict__[name])
-                raise TypeError(f"The field `{name}` was assigned by `{current_type}` instead of `{field_type}`")
+                raise TypeError(
+                    f"The field `{name}` was assigned by "
+                    f"`{current_type}` instead of `{field_type}`"
+                )
+
+        if self.mass <= 0:
+            raise ValueError("Error! Mass has to be a positive value.")
+
+        if self.diameter <= 0:
+            raise ValueError("Error! Diameter has to be a positive value.")
+
         self.cross_section = utils.calculate_sphere_cross_section(self.diameter)
 
+    def drop(
+        self, drop_altitude: float, verbose: bool = True, time_step: float = 0.1
+    ) -> dict:
+        """
+        Args:
+                drop_altitude: drop altitude [m]
+                verbose: verbosity level
+                time_step: size of the time step [s]
 
-def drop_calc(
-    item: Object,
-    drop_h: float = 1000,
-    verbose: bool = True,
-    time_step: float = 0.05,
-) -> list:
-    """
+        Returns:
+                History of velocity, distance and time
+        """
+        velocity = [0]  # stores the current velocity
+        altitude = [drop_altitude]  # stores the distance travelled
+        time = [0]  # stores the current time
+        flags = [0, 0]  # flags about warnings
 
-    Args:
-            item: object to drop
-            drop_h: drop height [m]
-            verbose: verbosity level
-            time_step: size of the time step [s]
+        while altitude[-1] > 0:
+            air = utils.atmosphere_model(altitude[-1])
+            flags = utils.check_flight_conditions(
+                air, velocity[-1], self.diameter, flags
+            )
 
-    Returns:
-            History of velocity, distance and time
+            k = utils.update_drag_coefficient(
+                air["density"], self.cross_section, self.drag_c
+            )
+            time.append(time[-1] + time_step)
 
-    """
+            current_velocity = utils.calculate_velocity(self.mass, k, time[-1])
+            velocity.append(current_velocity)
 
-    if item.mass <= 0:
-        raise ValueError("Error! Mass has to be a positive value.")
+            step_distance = utils.calculate_step_distance(
+                velocity[-1], velocity[-2], time_step
+            )
+            altitude.append(altitude[-1] - step_distance)   # the actual height [m]
 
-    if item.diameter <= 0:
-        raise ValueError("Error! Diameter has to be a positive value.")
+        if verbose:
+            if flags[0] == 1:
+                print(
+                    "WARNING: Mach number above 0.6! Compression effects may occur.\n"
+                )
+            if flags[1] == 1:
+                print("WARNING: reynolds number above 200000!\n")
+            print("RESULTS:")
+            print(f"Falling time is: {time[-1]:.3f}s ")
+            print(f"Impact velocity is {velocity[-1]:.3f} m/s")
 
-    velocity = [0]  # stores the current velocity
-    distance = [0]  # stores the distance travelled
-    time = [0]  # stores the current time
-
-    flags = [0, 0]  # flags about warnings
-
-    h_actual = drop_h  # actual height
-
-    while h_actual > 0:
-        if h_actual > 11000:
-            air = utils.stratospheric_model(h_actual)
-        else:
-            air = utils.tropospheric_model(h_actual)
-
-        mach = utils.calculate_mach_number(velocity[-1], air["sound"])
-        reynolds = utils.calculate_reynolds(
-            air["density"], velocity[-1], item.diameter, air["viscosity"]
-        )
-
-        flags = utils.check_flight_conditions(mach, reynolds, flags)
-
-        k = utils.update_drag_coefficient(
-            air["density"], item.cross_section, item.drag_c
-        )
-        time.append(time[-1] + time_step)
-
-        current_velocity = utils.calculate_velocity(item.mass, k, time[-1])
-        velocity.append(current_velocity)
-
-        step_distance = utils.calculate_step_distance(
-            velocity[-1], velocity[-2], time_step
-        )
-        distance.append(distance[-1] + step_distance)
-
-        h_actual = drop_h - distance[-1]  # the actual height [m]
-
-    if verbose:
-        if flags[0] == 1:
-            print("WARNING: Mach number above 0.6! Compression effects may occur.\n")
-        if flags[1] == 1:
-            print("WARNING: reynolds number above 200000!\n")
-        print("RESULTS:")
-        print(f"Falling time is: {time[-1]:.3f}s ")
-        print(f"Impact velocity is {velocity[-1]:.3f} m/s")
-
-    return [time, velocity, distance]
+        return {"time": time,  "altitude": altitude, "velocity": velocity}
