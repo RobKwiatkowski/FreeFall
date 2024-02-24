@@ -13,15 +13,16 @@ def stratospheric_model(height: float) -> tuple:
         height: current height above sea level
 
     Returns:
-        parameters of the air: temperature, pressure, density
+        parameters of the air: temperature, pressure, density, speed of sound
 
     """
 
     temperature = -56.46  # air temperature [deg C]
     pressure = 22.65 * math.exp(1.73 - 0.000157 * height)  # air pressure [kPa]
     density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
+    sound = _calculate_speed_of_sound(pressure, density)
 
-    return temperature, pressure, density
+    return temperature, pressure, density, sound
 
 
 def tropospheric_model(height: float) -> tuple:
@@ -39,11 +40,12 @@ def tropospheric_model(height: float) -> tuple:
     temperature = 15.04 - 0.00649 * height  # air temperature [deg C]
     pressure = 101.29 * ((temperature + 273.1) / 288.08) ** 5.256  # air pressure [kPa]
     density = pressure / (0.2869 * (temperature + 273.1))  # air density [kg/m3]
+    sound = _calculate_speed_of_sound(pressure, density)
 
-    return temperature, pressure, density
+    return temperature, density, sound
 
 
-def calculate_speed_of_sound(pressure: float, density: float) -> float:
+def _calculate_speed_of_sound(pressure: float, density: float) -> float:
     """
     Calculates a speed of sound
 
@@ -102,16 +104,17 @@ def calculate_mach_number(velocity, sound_speed):
 
 def calculate_reynolds(
     density: float, velocity: float, diameter: float, viscosity: float
-) -> list:
+) -> float:
     """
 
     Args:
-        density:
-        velocity:
-        diameter:
-        viscosity:
+        density: air density
+        velocity: current velocity
+        diameter: diameter of the ball
+        viscosity: viscosity
 
     Returns:
+        Reynolds number
 
     """
     return density * velocity * diameter * 0.001 / viscosity
@@ -121,41 +124,44 @@ def update_drag_coefficient(density, area, drag_c):
     """
 
     Args:
-        density:
-        area:
-        drag_c:
+        density: air density
+        area: cross-section area
+        drag_c: coefficient of drag
 
     Returns:
-
+        updated drag coefficient
     """
     return density * area * drag_c / 2
 
 
-def calculate_terminal_velocity(mass, drag_coefficient):
+def _calculate_terminal_velocity(mass, drag_coefficient):
     """
 
     Args:
-        mass:
-        drag_coefficient:
+        mass: mass of an object
+        drag_coefficient: drag coefficient
 
     Returns:
-
+        calculated terminal velocity
     """
+
     gravity = 9.81
     return math.sqrt(mass * gravity / drag_coefficient)
 
 
-def calculate_velocity(terminal, current_time):
+def calculate_velocity(mass, drag_co, current_time):
     """
 
     Args:
-        terminal:
-        current_time:
+        mass: mass of an object
+        drag_co: drag coefficient
+        current_time: current drop time
 
     Returns:
 
     """
     gravity = 9.81
+    terminal = _calculate_terminal_velocity(mass, drag_co)
     return terminal * math.tanh(gravity * current_time / terminal)
 
 
@@ -163,12 +169,46 @@ def calculate_total_distance(distance, curr_velocity, prev_velocity, time_step):
     """
 
     Args:
-        distance:
-        curr_velocity:
-        prev_velocity:
-        time_step:
+        distance: distance travelled so far
+        curr_velocity: current velocity
+        prev_velocity: previous velocity
+        time_step: time step size
+
+    Returns:
+        total distance travelled
+
+    """
+    return distance + (prev_velocity + curr_velocity) / 2 * time_step
+
+
+def calculate_step_distance(curr_velocity, prev_velocity, time_step):
+    """
+
+    Args:
+        curr_velocity: current velocity
+        prev_velocity: previous velocity
+        time_step: time step size
+
+    Returns:
+        total distance travelled
+
+    """
+    return (prev_velocity + curr_velocity) / 2 * time_step
+
+
+def check_flight_conditions(mach: float, reynolds: float, flags: list) -> list:
+    """
+
+    Args:
+        mach: current Mach number
+        reynolds: current Reynolds number
 
     Returns:
 
     """
-    return distance + (prev_velocity + curr_velocity) / 2 * time_step
+
+    if mach > 0.6 and flags[0] == 0:
+        flags[0] = 1
+    if reynolds > 200000 and flags[1] == 0:
+        flags[1] = 1
+    return flags
