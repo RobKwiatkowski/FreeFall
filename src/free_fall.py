@@ -39,7 +39,7 @@ class Object:
         self.cross_section = utils.calculate_sphere_cross_section(self.diameter)
 
     def drop(
-        self, drop_altitude: float, verbose: bool = True, time_step: float = 0.1
+        self, drop_altitude: float, verbose: bool = True, time_step: int | float = 0.5
     ) -> dict:
         """
         Args:
@@ -64,13 +64,14 @@ class Object:
             time.append(time[-1] + time_step)
 
             current_velocity = utils.calculate_velocity(
-                air, self.mass, self.cross_section, self.drag_c, time[-1])
+                air, self.mass, self.cross_section, self.drag_c, time[-1]
+            )
             velocity.append(current_velocity)
 
             step_distance = utils.calculate_step_distance(
                 velocity[-1], velocity[-2], time_step
             )
-            altitude.append(altitude[-1] - step_distance)   # the actual height [m]
+            altitude.append(altitude[-1] - step_distance)  # the actual height [m]
 
         if verbose:
             if flags[0] == 1:
@@ -83,4 +84,4 @@ class Object:
             print(f"Falling time is: {time[-1]:.3f}s ")
             print(f"Impact velocity is {velocity[-1]:.3f} m/s")
 
-        return {"time": time,  "altitude": altitude, "velocity": velocity}
+        return {"time": time, "altitude": altitude, "velocity": velocity}

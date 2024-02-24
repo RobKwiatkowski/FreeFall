@@ -172,7 +172,7 @@ def check_flight_conditions(air: dict, velocity, diameter: float, flags: list) -
 
 
 def calculate_velocity(air, mass, cross_section, drag_c, current_time):
-    """ Calculates current velocity considering the terminal velocity
+    """Calculates current velocity considering the terminal velocity
 
     Args:
         air: air parameters
@@ -185,7 +185,7 @@ def calculate_velocity(air, mass, cross_section, drag_c, current_time):
         Air viscosity
     """
     gravity = 9.81
-    coefficient = air['density'] * cross_section * drag_c / 2
+    coefficient = air["density"] * cross_section * drag_c / 2
     terminal = math.sqrt(mass * gravity / coefficient)
     return terminal * math.tanh(gravity * current_time / terminal)
 
