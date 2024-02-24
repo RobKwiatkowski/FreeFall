@@ -61,11 +61,11 @@ class Object:
                 air, velocity[-1], self.diameter, flags
             )
 
+            time.append(time[-1] + time_step)
+
             k = utils.update_drag_coefficient(
                 air["density"], self.cross_section, self.drag_c
             )
-            time.append(time[-1] + time_step)
-
             current_velocity = utils.calculate_velocity(self.mass, k, time[-1])
             velocity.append(current_velocity)
 

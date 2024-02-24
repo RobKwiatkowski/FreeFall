@@ -3,6 +3,7 @@ Utility functions
 """
 
 import math
+from typing import Callable
 
 
 def stratospheric_model(height: float) -> dict:
@@ -61,13 +62,14 @@ def tropospheric_model(height: float) -> dict:
     return air
 
 
-def atmosphere_model(altitude):
+def atmosphere_model(altitude: float) -> Callable:
     """
 
     Args:
-        altitude:
+        altitude: current altitude [m]
 
     Returns:
+        atmospheric model
 
     """
     if altitude > 11000:
