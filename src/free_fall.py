@@ -13,11 +13,15 @@ from dataclasses import dataclass
 
 @dataclass()
 class Object:
-    mass: float
-    diameter: float
-    drag_c: float
+    mass: float | int
+    diameter: float | int
+    drag_c: float | int
 
     def __post_init__(self):
+        for (name, field_type) in self.__annotations__.items():
+            if not isinstance(self.__dict__[name], field_type):
+                current_type = type(self.__dict__[name])
+                raise TypeError(f"The field `{name}` was assigned by `{current_type}` instead of `{field_type}`")
         self.cross_section = utils.calculate_sphere_cross_section(self.diameter)
 
 
@@ -39,11 +43,6 @@ def drop_calc(
             History of velocity, distance and time
 
     """
-
-    if not isinstance(item.mass, (float, int)) or not isinstance(
-        item.diameter, (float, int)
-    ):
-        raise ValueError("Error! Only numerical values are allowed.")
 
     if item.mass <= 0:
         raise ValueError("Error! Mass has to be a positive value.")
