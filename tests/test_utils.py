@@ -2,7 +2,7 @@
 Unit tests for utils.py
 """
 
-from src import utils
+from src.free_fall import utils
 import pytest
 
 
