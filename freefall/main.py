@@ -15,7 +15,13 @@ from dataclasses import dataclass
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from freefall.utils import *
+from freefall.utils import (
+    calculate_sphere_cross_section,
+    atmosphere_model,
+    check_flight_conditions,
+    calculate_velocity,
+    calculate_step_distance,
+)
 
 
 @dataclass(kw_only=True)
@@ -46,7 +52,7 @@ class Object:
         self.cross_section = calculate_sphere_cross_section(self.diameter)
 
     def drop(
-        self, drop_altitude: float, verbose: bool = True, time_step: int | float = 0.5
+        self, drop_altitude: float, time_step: int | float = 0.5, verbose: bool = False
     ) -> dict:
         """
         Args:
@@ -64,9 +70,7 @@ class Object:
 
         while altitude[-1] > 0:
             air = atmosphere_model(altitude[-1])
-            flags = check_flight_conditions(
-                air, velocity[-1], self.diameter, flags
-            )
+            flags = check_flight_conditions(air, velocity[-1], self.diameter, flags)
 
             time.append(time[-1] + time_step)
 
@@ -91,4 +95,4 @@ class Object:
             print(f"Falling time is: {time[-1]:.3f}s ")
             print(f"Impact velocity is {velocity[-1]:.3f} m/s")
 
-        return {"time": time, "altitude": altitude, "velocity": velocity}
+        return {"time": time, "altitude": altitude, "velocity": velocity, "flags": flags}
