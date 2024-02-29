@@ -7,8 +7,15 @@ from NASA webpage.
 Viscosity is calculated based on Sutherland equation.
 """
 
+import sys
+import os
+
 from dataclasses import dataclass
-import utils
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from free_fall.utils import *
 
 
 @dataclass(kw_only=True)
@@ -36,7 +43,7 @@ class Object:
         if self.diameter <= 0:
             raise ValueError("Error! Diameter has to be a positive value.")
 
-        self.cross_section = utils.calculate_sphere_cross_section(self.diameter)
+        self.cross_section = calculate_sphere_cross_section(self.diameter)
 
     def drop(
         self, drop_altitude: float, verbose: bool = True, time_step: int | float = 0.5
@@ -56,19 +63,19 @@ class Object:
         flags = [0, 0]  # flags about warnings
 
         while altitude[-1] > 0:
-            air = utils.atmosphere_model(altitude[-1])
-            flags = utils.check_flight_conditions(
+            air = atmosphere_model(altitude[-1])
+            flags = check_flight_conditions(
                 air, velocity[-1], self.diameter, flags
             )
 
             time.append(time[-1] + time_step)
 
-            current_velocity = utils.calculate_velocity(
+            current_velocity = calculate_velocity(
                 air, self.mass, self.cross_section, self.drag_c, time[-1]
             )
             velocity.append(current_velocity)
 
-            step_distance = utils.calculate_step_distance(
+            step_distance = calculate_step_distance(
                 velocity[-1], velocity[-2], time_step
             )
             altitude.append(altitude[-1] - step_distance)  # the actual height [m]
