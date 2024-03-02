@@ -24,7 +24,7 @@ from freefall.utils import (
 )
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class Object:
     """
     Object to be dropped.
