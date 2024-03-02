@@ -51,13 +51,10 @@ class Object:
 
         self.cross_section = calculate_sphere_cross_section(self.diameter)
 
-    def drop(
-        self, drop_altitude: float, time_step: int | float = 0.5, verbose: bool = False
-    ) -> dict:
+    def drop(self, drop_altitude: float, time_step: int | float = 0.5) -> dict:
         """
         Args:
                 drop_altitude: drop altitude [m]
-                verbose: verbosity level
                 time_step: size of the time step [s]
 
         Returns:
@@ -83,16 +80,5 @@ class Object:
                 velocity[-1], velocity[-2], time_step
             )
             altitude.append(altitude[-1] - step_distance)  # the actual height [m]
-
-        if verbose:
-            if flags[0] == 1:
-                print(
-                    "WARNING: Mach number above 0.6! Compression effects may occur.\n"
-                )
-            if flags[1] == 1:
-                print("WARNING: reynolds number above 200000!\n")
-            print("RESULTS:")
-            print(f"Falling time is: {time[-1]:.3f}s ")
-            print(f"Impact velocity is {velocity[-1]:.3f} m/s")
 
         return {"time": time, "altitude": altitude, "velocity": velocity, "flags": flags}
