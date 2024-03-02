@@ -81,4 +81,4 @@ class Object:
             )
             altitude.append(altitude[-1] - step_distance)  # the actual height [m]
 
-        return {"time": time, "altitude": altitude, "velocity": velocity, "flags": flags}
+        return {"time": time, "altitude": altitude, "velocity": velocity}, flags
